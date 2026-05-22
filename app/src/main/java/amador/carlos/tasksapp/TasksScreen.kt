@@ -9,8 +9,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -39,11 +45,14 @@ fun TasksScreen(
     // collectAsStateWithLifecycle deja de escuchar
     // cuando la pantalla no está visible.
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
+    val searchInput by viewModel.searchInput
+        .collectAsStateWithLifecycle()
 
     // Estado local: texto del campo de nueva tarea.
     var nuevaTareaTexto by remember { mutableStateOf("") }
 
     var taskToBeDeleted by remember { mutableStateOf<TaskEntity?>(null) }
+    var showSortMenu by remember { mutableStateOf(false) }
 
     if (taskToBeDeleted != null) {
         AlertDialog(
@@ -81,6 +90,61 @@ fun TasksScreen(
                 style = MaterialTheme.typography.headlineMedium,
                 modifier = Modifier.padding(vertical = 16.dp)
             )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                SearchBar(
+                    searchInput = searchInput,
+                    onSearchInputChanged = { texto -> viewModel.onSearchInputChanged(texto) },
+                    onSearchClicked = { viewModel.executeSearch() },
+                    modifier = Modifier.weight(1f) // Ocupa el espacio disponible
+                )
+
+                Box {
+                    IconButton(onClick = { showSortMenu = true }) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "Opciones de ordenamiento"
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = showSortMenu,
+                        onDismissRequest = { showSortMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Más recientes primero") },
+                            onClick = {
+                                viewModel.updateSortOrder(SortOrder.NEWEST)
+                                showSortMenu = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Más antiguas primero") },
+                            onClick = {
+                                viewModel.updateSortOrder(SortOrder.OLDEST)
+                                showSortMenu = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Título A-Z") },
+                            onClick = {
+                                viewModel.updateSortOrder(SortOrder.TITLE_ASC)
+                                showSortMenu = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Título Z-A") },
+                            onClick = {
+                                viewModel.updateSortOrder(SortOrder.TITLE_DESC)
+                                showSortMenu = false
+                            }
+                        )
+                    }
+                }
+            }
             // ----- Lista de tareas -----
             Box(modifier = Modifier.weight(1f)) {
                 if (tasks.isEmpty()) {

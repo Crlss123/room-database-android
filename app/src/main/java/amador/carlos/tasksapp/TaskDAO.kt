@@ -19,4 +19,16 @@ interface TaskDAO {
     suspend fun update(task: TaskEntity)
     @Delete
     suspend fun delete(task: TaskEntity)
+
+    @Query("SELECT * FROM tasks WHERE title LIKE '%' || :query || '%' ORDER BY createdAt DESC")
+    fun searchTasksNewestFirst(query: String): Flow<List<TaskEntity>>
+
+    @Query("SELECT * FROM tasks WHERE title LIKE '%' || :query || '%' ORDER BY createdAt ASC")
+    fun searchTasksOldestFirst(query: String): Flow<List<TaskEntity>>
+
+    @Query("SELECT * FROM tasks WHERE title LIKE '%' || :query || '%' ORDER BY title ASC")
+    fun searchTasksTitleAsc(query: String): Flow<List<TaskEntity>>
+
+    @Query("SELECT * FROM tasks WHERE title LIKE '%' || :query || '%' ORDER BY title DESC")
+    fun searchTasksTitleDesc(query: String): Flow<List<TaskEntity>>
 }
